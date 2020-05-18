@@ -27,13 +27,13 @@ describe('Named mapping', () => {
         let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping));
 
         it('get', () => {
-            assert.isTrue(wrapped.text === 'test1');
+            assert.isTrue(wrapped.named.text === 'test1');
         });
     
         it('set', () => {
             let val = Math.floor(Math.random() * 10000).toString();
 
-            wrapped.text = val;
+            wrapped.named.text = val;
         
             assert.equal(original.t, val);
         });
@@ -50,7 +50,7 @@ describe('Named mapping', () => {
             
             original.t = val;
         
-            assert.equal(wrapped.text, val);
+            assert.equal(wrapped.named.text, val);
         });
     
     });

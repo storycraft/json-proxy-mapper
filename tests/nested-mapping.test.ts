@@ -45,13 +45,13 @@ describe('Nested mapping get / set', () => {
         let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
 
         it('get', () => {
-            assert.isTrue(wrapped.obj.text === '1234');
+            assert.isTrue(wrapped.named.obj.text === '1234');
         });
     
         it('set', () => {
             let val = Math.floor(Math.random() * 10000).toString();
 
-            wrapped.obj.text = val;
+            wrapped.named.obj.text = val;
         
             assert.equal(original.o.t, val);
         });
@@ -68,7 +68,7 @@ describe('Nested mapping get / set', () => {
             
             original.o.t = val;
         
-            assert.equal(wrapped.obj.text, val);
+            assert.equal(wrapped.named.obj.text, val);
         });
     
     });
@@ -81,7 +81,7 @@ describe('Nested mapping get / set', () => {
             
         original.o = { t: val };
         
-        assert.equal(wrapped.obj.text, val);
+        assert.equal(wrapped.named.obj.text, val);
     });
 
     it('set object from wrapped', () => {
@@ -90,7 +90,7 @@ describe('Nested mapping get / set', () => {
     
         let val = Math.floor(Math.random() * 10000).toString();
             
-        wrapped.obj = { text: val };
+        wrapped.named.obj = { text: val };
         
         assert.equal(original.o.t, val);
     });

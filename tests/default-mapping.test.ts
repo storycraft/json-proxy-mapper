@@ -34,13 +34,13 @@ describe('Mapping with default', () => {
         let wrapped = new WrappedObject<OptionalObj>(original, new ObjectMapper(optionalMapping, OptionalMap));
 
         it('get or default', () => {
-            assert.equal(wrapped.optional, 12);
+            assert.equal(wrapped.named.optional, 12);
         });
     
         it('set', () => {
             let val = Math.floor(Math.random() * 10000);
 
-            wrapped.optional = val;
+            wrapped.named.optional = val;
         
             assert.equal(original.o, val);
         });

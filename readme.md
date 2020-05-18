@@ -20,14 +20,12 @@ let testMapping = {
 
 }
 
-let original = { t: '178231452312' };
+let wrapped = new WrappedObject<TestObj>({ t: '178231452312' }, new ObjectMapper(testMapping));
 
-let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping));
+console.log(wrapped.named.token === '178231452312'); // true
 
-console.log(wrapped.token === '178231452312'); // true
-
-wrapped.token = '172849081972';
-console.log(original.t === '172849081972'); // true
+wrapped.named.token = '172849081972';
+console.log(wrapped.original.t === '172849081972'); // true
 ```
 ## Nested
 parts from nested-mapping.test.ts
@@ -63,23 +61,21 @@ const ConvertMap = {
 
 }
 
-let original = { o: { t: '5678' } };
+let wrapped = new WrappedObject<TestObj>({ o: { t: '5678' } }, new ObjectMapper(testMapping, ConvertMap));
 
-let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
+console.log(wrapped.named.obj.text === '5678'); //true
 
-console.log(wrapped.obj.text === '5678'); //true
+wrapped.original.o.t = '1234'
+console.log(wrapped.named.obj.text === '1234'); //true
 
-original.o.t = '1234'
-console.log(wrapped.obj.text === '1234'); //true
+wrapped.named.obj.text = '4321'
+console.log(wrapped.original.o.t === '4321'); //true
 
-wrapped.obj.text = '4321'
-console.log(original.o.t === '4321'); //true
+wrapped.named.obj = { text: '1111' }
+console.log(wrapped.original.o.t === '1111'); //true
 
-wrapped.obj = { text: '1111' }
-console.log(original.o.t === '1111'); //true
-
-original.o = { t: '2222' }
-console.log(wrapped.obj.text === '2222'); //true
+wrapped.original.o = { t: '2222' }
+console.log(wrapped.named.obj.text === '2222'); //true
 
 ```
 

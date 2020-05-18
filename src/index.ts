@@ -4,16 +4,26 @@
  * Copyright (c) storycraft. Licensed under the Apache-2.0 Licence.
  */
 
-type WrappedObject = {
+export class WrappedObject<T extends object> {
 
-    revocable<T extends object>(target: any, handler: ObjectMapper): { proxy: T; revoke: () => void; };
+    public readonly named: T;
+    public readonly original: any;
     
-    new <T extends object>(target: any, handler: ObjectMapper): T;
+    constructor (target: any, handler: ObjectMapper) {
+        this.original = target;
+
+        this.named = new Proxy<T>(target, handler);
+    }
+
+    static createFrom<T extends object>(named: T, handler: ObjectMapper): WrappedObject<T> {
+        let wrapped = new WrappedObject<T>({}, handler);
+
+        Reflect.ownKeys(named).forEach(p => Reflect.set(wrapped.named, p, Reflect.get(named, p)));
+
+        return wrapped;
+    }
 
 }
-
-export const WrappedObject: WrappedObject = Proxy;
-
 export interface TypeConverter<T> {
 
     getFromRaw(target: any, key: PropertyKey, rawKey: PropertyKey, receiver?: any): T;
