@@ -47,7 +47,7 @@ export interface ConvertMap {
 
 export namespace Converter {
 
-    export abstract class PrimitiveLike<T extends object> implements TypeConverter<T> {
+    export abstract class Immutable<T extends object> implements TypeConverter<T> {
 
         private objectMap: WeakMap<object, T>;
 
@@ -84,7 +84,7 @@ export namespace Converter {
 
     }
 
-    export class Object<T extends object> extends PrimitiveLike<T> {
+    export class Object<T extends object> extends Immutable<T> {
 
         constructor(
             mapper: ObjectMapper
