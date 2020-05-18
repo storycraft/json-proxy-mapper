@@ -1,5 +1,5 @@
 {
-  "name": "json-object-mapper",
+  "name": "json-proxy-mapper",
   "version": "0.0.1",
   "description": "Simple and powerful json mapper using ES6 Proxy",
   "main": "dist/index.js",

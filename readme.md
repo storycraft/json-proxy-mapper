@@ -1,7 +1,7 @@
-# JSON Object mapper
+# JSON Proxy mapper
 
-JSON Object mapper provides simple wrapper for json.  
-It wraps obfuscated object and provides mapped object using ES6 Proxy.
+JSON Proxy mapper provides simple wrapped proxy for json.  
+It wraps obfuscated object and provides named object using ES6 Proxy.
 
 ## Example
 
