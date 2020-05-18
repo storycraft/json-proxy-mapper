@@ -1,6 +1,6 @@
 {
   "name": "json-proxy-mapper",
-  "version": "0.0.2",
+  "version": "1.0.0",
   "description": "Simple and powerful json mapper using ES6 Proxy",
   "main": "dist/index.js",
   "scripts": {

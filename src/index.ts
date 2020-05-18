@@ -101,10 +101,8 @@ export namespace Converter {
 
 export class ObjectMapper implements ProxyHandler<any> {
 
-    private objectMap: WeakMap<object, any>;
-
     constructor(private mappings: NameMapping, private convertMap?: ConvertMap) {
-        this.objectMap = new WeakMap();
+        
     }
 
     has(target: any, p: PropertyKey): boolean {
