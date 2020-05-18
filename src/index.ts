@@ -26,10 +26,8 @@ export class WrappedObject<T extends object> {
 }
 export interface TypeConverter<T> {
 
-    getFromRaw(target: any, key: PropertyKey, rawKey: PropertyKey, receiver?: any): T;
-    setToRaw(target: any, key: PropertyKey, rawKey: PropertyKey, value: T, receiver?: any): boolean;
-
-    defaultVal?: T;
+    getFromRaw(target: any, rawKey: PropertyKey, receiver?: any): T;
+    setToRaw(target: any, rawKey: PropertyKey, value: T, receiver?: any): boolean;
 
 }
 
@@ -49,43 +47,31 @@ export interface ConvertMap {
 
 export namespace Converter {
 
-    export function setDefault<T>(defaultVal: T): TypeConverter<T> {
-        return {
-            
-            getFromRaw: (target: any, key: string, rawKey: PropertyKey, receiver?: any) => Reflect.get(target, rawKey, receiver),
-            setToRaw: (target: any, key: PropertyKey, rawKey: PropertyKey, value: any, receiver?: any) => Reflect.set(target, rawKey, value, receiver),
+    export abstract class PrimitiveLike<T extends object> implements TypeConverter<T> {
 
-            defaultVal: defaultVal
-        }
-    }
-
-    export const NUMBER = setDefault<number>(0);
-    export const STRING = setDefault<string>('');
-    export const BOOL = setDefault<boolean>(false);
-
-    export class Object<T extends object> implements TypeConverter<T> {
-
-        public defaultVal?: T;
-
-        private ref?: T;
-        private cache?: T;
+        private objectMap: WeakMap<object, T>;
 
         constructor(
-            private mapper: ObjectMapper,
-            defaultVal?: T
+            protected readonly mapper: ObjectMapper
         ) {
-            this.defaultVal = defaultVal;
+            this.objectMap = new WeakMap();
         }
 
-        getFromRaw(target: any, key: string, rawKey: PropertyKey, receiver?: any): T {
-            if (this.ref === target) return this.cache!;
+        getFromRaw(target: any, rawKey: PropertyKey, receiver?: any): T {
+            let rawObj = Reflect.get(target, rawKey);
+            
+            if (this.objectMap.has(rawObj)) return this.objectMap.get(rawObj)!;
 
-            this.ref = target;
+            let cache = this.createConverted(rawObj);
 
-            return this.cache = new Proxy<T>(Reflect.get(target, rawKey), this.mapper);
+            this.objectMap.set(rawObj, cache);
+
+            return cache;
         }
 
-        setToRaw(target: any, key: PropertyKey, rawKey: PropertyKey, value: T, receiver?: any) {
+        abstract createConverted(rawObj: any): T;
+
+        setToRaw(target: any, rawKey: PropertyKey, value: T, receiver?: any) {
             let rawObj: any = {};
 
             let namedKeys = Reflect.ownKeys(value);
@@ -97,12 +83,28 @@ export namespace Converter {
         }
 
     }
+
+    export class Object<T extends object> extends PrimitiveLike<T> {
+
+        constructor(
+            mapper: ObjectMapper
+        ) {
+            super(mapper);
+        }
+
+        createConverted(rawObj: any): T {
+            return new Proxy<T>(rawObj, this.mapper);
+        }
+
+    }
 }
 
 export class ObjectMapper implements ProxyHandler<any> {
 
-    constructor(private mappings: NameMapping, private convertMap?: ConvertMap) {
+    private objectMap: WeakMap<object, any>;
 
+    constructor(private mappings: NameMapping, private convertMap?: ConvertMap) {
+        this.objectMap = new WeakMap();
     }
 
     has(target: any, p: PropertyKey): boolean {
@@ -121,9 +123,7 @@ export class ObjectMapper implements ProxyHandler<any> {
             if (this.convertMap && Reflect.has(this.convertMap, key)) {
                 let converter = Reflect.get(this.convertMap, key) as TypeConverter<any>;
 
-                if (Reflect.has(target, rawKey)) return converter.getFromRaw(target, key, rawKey, receiver);
-
-                if (converter.defaultVal) return converter.defaultVal;
+                if (Reflect.has(target, rawKey)) return converter.getFromRaw(target, rawKey, receiver);
             }
 
             return Reflect.get(target, rawKey, receiver);
@@ -138,7 +138,7 @@ export class ObjectMapper implements ProxyHandler<any> {
             if (this.convertMap && Reflect.has(this.convertMap, key)) {
                 let converter = Reflect.get(this.convertMap, key) as TypeConverter<any>;
 
-                return converter.setToRaw(target, key, rawKey, value, receiver);
+                return converter.setToRaw(target, rawKey, value, receiver);
             }
 
             Reflect.set(target, rawKey, value, receiver);
