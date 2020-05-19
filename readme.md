@@ -57,7 +57,7 @@ let nestedMapping = {
 
 const ConvertMap = {
 
-    'obj': new Converter.Object(new ObjectMapper(nestedMapping))
+    'obj': new Converter.Object(nestedMapping)
 
 }
 
@@ -77,6 +77,45 @@ console.log(wrapped.original.o.t === '1111'); //true
 wrapped.original.o = { t: '2222' }
 console.log(wrapped.named.obj.text === '2222'); //true
 
+```
+
+## Serialize
+
+parts from serialize.test.ts
+```typescript
+
+interface NestedObj {
+
+    text: string
+
+}
+
+interface TestObj {
+
+    obj: NestedObj
+
+}
+
+let testMapping = {
+
+    'obj': 'o'
+
+}
+
+let nestedMapping = {
+
+    'text': 't'
+
+}
+
+const convertMap = {
+
+    'obj': new Converter.Object(nestedMapping)
+
+}
+
+let deserialized = { obj: { text: 'asdf' } };
+console.log(Serializer.serialize(deserialized, new ObjectMapper(testMapping, convertMap))); //{ o: { t: 'asdf' } }
 ```
 
 ## License

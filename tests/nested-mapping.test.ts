@@ -31,9 +31,9 @@ let nestedMapping = {
 
 }
 
-const ConvertMap = {
+const convertMap = {
 
-    'obj': new Converter.Object(new ObjectMapper(nestedMapping))
+    'obj': new Converter.Object(nestedMapping)
 
 }
 
@@ -42,7 +42,7 @@ describe('Nested mapping get / set', () => {
     describe('changes from wrapped', () => {
 
         let original = { o: { t: '1234' } };
-        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
+        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, convertMap));
 
         it('get', () => {
             assert.isTrue(wrapped.named.obj.text === '1234');
@@ -61,7 +61,7 @@ describe('Nested mapping get / set', () => {
     describe('changes from original', () => {
 
         let original = { o: { t: '5678' } };
-        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
+        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, convertMap));
     
         it('set', () => {
             let val = Math.floor(Math.random() * 10000).toString();
@@ -75,7 +75,7 @@ describe('Nested mapping get / set', () => {
 
     it('set object from original', () => {
         let original = { o: { t: '5678' } };
-        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
+        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, convertMap));
     
         let val = Math.floor(Math.random() * 10000).toString();
             
@@ -86,7 +86,7 @@ describe('Nested mapping get / set', () => {
 
     it('set object from wrapped', () => {
         let original = { o: { t: '5678' } };
-        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, ConvertMap));
+        let wrapped = new WrappedObject<TestObj>(original, new ObjectMapper(testMapping, convertMap));
     
         let val = Math.floor(Math.random() * 10000).toString();
             

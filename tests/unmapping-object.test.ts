@@ -35,7 +35,7 @@ let nestedMapping = {
 
 const ConvertMap = {
 
-    'obj': new Converter.Object(new ObjectMapper(nestedMapping))
+    'obj': new Converter.Object(nestedMapping)
 
 }
 
