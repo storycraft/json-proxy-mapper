@@ -113,6 +113,14 @@ export class ObjectMapper implements ProxyHandler<any> {
         return Reflect.ownKeys(this.mappings);
     }
 
+    getOwnPropertyDescriptor(target: any, key: PropertyKey): PropertyDescriptor | undefined {
+        if (Reflect.has(this.mappings, key)) {
+            let rawKey = Reflect.get(this.mappings, key);
+
+            return Reflect.getOwnPropertyDescriptor(target, rawKey);
+        }
+    }
+
     get(target: any, key: PropertyKey, receiver?: any) {
         if (Reflect.has(this.mappings, key)) {
 
