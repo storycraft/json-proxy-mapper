@@ -4,20 +4,21 @@
  * Copyright (c) storycraft. Licensed under the Apache-2.0 Licence.
  */
 
-import { ObjectMapper, TypeConverter, NameMapping, ConvertMap } from "./common";
+import { ObjectMapper, TypeConverter, NameMapping, ConvertMap, ObjectMapperBase, ArrayMapper, PartialNamedArray } from "./common";
+import { Serializer } from "./serializer";
 
 export class WrappedObject<T extends object> {
 
     public readonly named: T;
     public readonly original: any;
     
-    constructor (target: any, handler: ObjectMapper) {
+    constructor(target: any, handler: ObjectMapperBase) {
         this.original = target;
 
         this.named = new Proxy<T>(target, handler);
     }
 
-    static createFrom<T extends object>(named: T, handler: ObjectMapper): WrappedObject<T> {
+    static createFrom<T extends object>(named: T, handler: ObjectMapperBase): WrappedObject<T> {
         let wrapped = new WrappedObject<T>({}, handler);
 
         Reflect.ownKeys(named).forEach(p => Reflect.set(wrapped.named, p, Reflect.get(named, p)));
@@ -27,20 +28,27 @@ export class WrappedObject<T extends object> {
 
 }
 
+export class WrappedArray<T> extends WrappedObject<PartialNamedArray<T>> {
+
+}
+
 export namespace Converter {
 
-    export abstract class ImmutableRef<T extends object> extends ObjectMapper implements TypeConverter<T> {
+    export abstract class ImmutableRef<T extends object> implements TypeConverter<T> {
 
         private objectMap: WeakMap<object, T>;
 
-        constructor(mappings: NameMapping, convertMap: ConvertMap | null = null) {
-            super(mappings, convertMap);
+        public readonly mapper: ObjectMapperBase;
 
+        constructor(mappings: NameMapping, convertMap: ConvertMap | null = null) {
             this.objectMap = new WeakMap();
+            this.mapper = this.createMapper(mappings, convertMap);
         }
 
+        protected abstract createMapper(mappings: NameMapping, convertMap: ConvertMap | null): ObjectMapperBase;
+
         getFromRaw(target: any, rawKey: PropertyKey, receiver?: any): T {
-            let rawObj = Reflect.get(target, rawKey);
+            let rawObj = Reflect.get(target, rawKey, receiver);
             
             if (this.objectMap.has(rawObj)) return this.objectMap.get(rawObj)!;
 
@@ -54,22 +62,31 @@ export namespace Converter {
         abstract createConverted(rawObj: any): T;
 
         setToRaw(target: any, rawKey: PropertyKey, value: T, receiver?: any) {
-            let rawObj: any = {};
-
-            let namedKeys = Reflect.ownKeys(value);
-            for(let namedKey of namedKeys) {
-                this.set(rawObj, namedKey, Reflect.get(value, namedKey), rawObj);
-            }
-            
-            return Reflect.set(target, rawKey, rawObj, receiver);
+            return Reflect.set(target, rawKey, Serializer.serialize(value, this.mapper), receiver);
         }
 
     }
 
     export class Object<T extends object> extends ImmutableRef<T> {
 
+        createMapper(mappings: NameMapping, convertMap: ConvertMap | null = null) {
+            return new ObjectMapper(mappings, convertMap);
+        }
+
         createConverted(rawObj: any): T {
-            return new Proxy<T>(rawObj, this);
+            return new Proxy<T>(rawObj, this.mapper);
+        }
+
+    }
+
+    export class Array<T extends object> extends ImmutableRef<Array<T>> {
+
+        createMapper(mappings: NameMapping, convertMap: ConvertMap | null = null) {
+            return new ArrayMapper(mappings, convertMap);
+        }
+
+        createConverted(rawArr: any): Array<T> {
+            return new Proxy(rawArr, this.mapper);
         }
 
     }

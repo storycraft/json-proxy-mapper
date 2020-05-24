@@ -4,6 +4,8 @@
  * Copyright (c) storycraft. Licensed under the MIT Licence.
  */
 
+import { Serializer } from "./serializer";
+
 export interface TypeConverter<T> {
 
     getFromRaw(target: any, rawKey: PropertyKey, receiver: any): T;
@@ -25,24 +27,34 @@ export interface ConvertMap {
 
 }
 
-export interface ObjectMapperBase {
+export abstract class ObjectMapperBase implements ProxyHandler<any> {
 
-    getConverterFor<T>(key: PropertyKey): TypeConverter<T> | null;
+    abstract getConverterFor<T>(key: PropertyKey): TypeConverter<T> | null;
 
-    getMappingKeys(): PropertyKey[];
-    getRawKey(key: PropertyKey): PropertyKey | null;
+    abstract getMappingKeys(): PropertyKey[];
+    abstract getRawKey(key: PropertyKey): PropertyKey | null;
 
-    has(target: any, key: PropertyKey): boolean;
+    abstract ownKeys(target: any): PropertyKey[];
 
-    get(target: any, key: PropertyKey, receiver: any): any;
-    set(target: any, key: PropertyKey, value: any, receiver: any): boolean;
+    abstract has(target: any, key: PropertyKey): boolean;
+
+    abstract get(target: any, key: PropertyKey, receiver: any): any;
+    abstract set(target: any, key: PropertyKey, value: any, receiver: any): boolean;
 
 }
 
-export class ObjectMapper implements ObjectMapperBase, ProxyHandler<any> {
+export class ObjectMapper extends ObjectMapperBase {
 
     constructor(private mappings: NameMapping, private convertMap: ConvertMap | null = null) {
-        
+        super();
+    }
+
+    getMappingKeys() {
+        return Reflect.ownKeys(this.mappings);
+    }
+
+    ownKeys(target: any): PropertyKey[] {
+        return this.getMappingKeys();
     }
 
     getConverterFor<T>(key: PropertyKey) {
@@ -59,14 +71,6 @@ export class ObjectMapper implements ObjectMapperBase, ProxyHandler<any> {
         if (!rawKey) return false;
 
         return Reflect.has(target, rawKey);
-    }
-
-    getMappingKeys() {
-        return Reflect.ownKeys(this.mappings);
-    }
-
-    ownKeys(target: any): PropertyKey[] {
-        return this.getMappingKeys();
     }
 
     getRawKey(key: PropertyKey) {
@@ -114,4 +118,71 @@ export class ObjectMapper implements ObjectMapperBase, ProxyHandler<any> {
         return false;
     }
 
+}
+
+export type PartialNamedArray<T> = {
+
+    [index: number]: T;
+    
+} & Array<unknown>;
+
+export class ArrayMapper extends ObjectMapperBase {
+
+    private arrayMap: WeakMap<object, any>;
+    private objectMapper: ObjectMapper;
+
+    constructor(private objMappings: NameMapping, private objConvertMap: ConvertMap | null = null) {
+        super();
+
+        this.arrayMap = new WeakMap();
+        this.objectMapper = new ObjectMapper(this.objMappings, this.objConvertMap);
+    }
+
+    getConverterFor<T>(key: PropertyKey): TypeConverter<T> | null {
+        return null;
+    }
+    
+    getMappingKeys(): PropertyKey[] {
+        return [];
+    }
+
+    ownKeys(target: any) {
+        return Reflect.ownKeys(target);
+    }
+
+    getRawKey(key: PropertyKey): PropertyKey | null {
+        return key;
+    }
+
+    has(target: any, key: PropertyKey): boolean {
+        return Reflect.has(target, key);
+    }
+
+    protected isCoreKey(key: PropertyKey): boolean {
+        return Reflect.ownKeys(Array.prototype).includes(key);
+    }
+
+    get(target: any, key: PropertyKey, receiver: any) {
+        let val = Reflect.get(target, key, receiver);
+        if (this.isCoreKey(key)) return val;
+
+        return this.getProxyFor(val);
+    }
+
+    set(target: any, key: PropertyKey, value: any, receiver: any): boolean {
+       if (this.isCoreKey(key)) return Reflect.set(target, key, value, receiver);
+
+       return Reflect.set(target, key, Serializer.serialize(value, this.objectMapper), receiver);
+    }
+
+    protected getProxyFor(rawObj: any) {
+        if (this.arrayMap.has(rawObj)) return this.arrayMap.get(rawObj)!;
+
+        let converted = new Proxy(rawObj, this.objectMapper);
+
+        this.arrayMap.set(rawObj, converted);
+
+        return converted;
+    }
+    
 }
