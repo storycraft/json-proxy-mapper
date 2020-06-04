@@ -1,3 +1,5 @@
+[![npm version](https://badge.fury.io/js/json-proxy-mapper.svg)](https://badge.fury.io/js/json-proxy-mapper)
+
 # JSON Proxy mapper
 
 JSON Proxy mapper provides simple wrapped proxy for json.  
