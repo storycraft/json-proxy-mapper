@@ -88,6 +88,8 @@ export class ObjectMapper extends ObjectMapperBase {
     }
 
     get(target: any, key: PropertyKey, receiver: any) {
+        if (!target) return;
+
         let rawKey = this.getRawKey(key);
 
         if (rawKey) {
@@ -102,6 +104,8 @@ export class ObjectMapper extends ObjectMapperBase {
     }
 
     set(target: any, key: PropertyKey, value: any, receiver: any): boolean {
+        if (!target) return false;
+
         let rawKey = this.getRawKey(key);
 
         if (rawKey) {
@@ -163,6 +167,8 @@ export class ArrayMapper extends ObjectMapperBase {
     }
 
     get(target: any, key: PropertyKey, receiver: any) {
+        if (!target) return;
+
         let val = Reflect.get(target, key, receiver);
         if (this.isCoreKey(key)) return val;
 

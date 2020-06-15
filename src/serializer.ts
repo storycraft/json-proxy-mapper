@@ -30,11 +30,15 @@ export namespace Serializer {
     export function deserialize<T extends object>(rawObj: any[], mapper: ArrayMapper): T[];
     export function deserialize<T extends object>(rawObj: any, mapper: ObjectMapperBase): T
     export function deserialize<T extends object>(rawObj: any, mapper: ObjectMapperBase): T | T[] {
-        if (rawObj instanceof Array && mapper instanceof ArrayMapper) {
+        if (rawObj && rawObj instanceof Array && mapper instanceof ArrayMapper) {
             return deserializeArray<T>(rawObj, mapper);
         }
 
-        let deserialized: any = {};
+        let deserialized: any;
+
+        if (!rawObj) return deserialized;
+
+        deserialized = {};
         
         let mappingKeys = mapper.getMappingKeys();
 
