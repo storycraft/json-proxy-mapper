@@ -142,6 +142,10 @@ export class ArrayMapper extends ObjectMapperBase {
         this.objectMapper = new ObjectMapper(this.objMappings, this.objConvertMap);
     }
 
+    get ObjectMapper() {
+        return this.objectMapper;
+    }
+
     getConverterFor<T>(key: PropertyKey): TypeConverter<T> | null {
         return null;
     }
@@ -182,6 +186,7 @@ export class ArrayMapper extends ObjectMapperBase {
     }
 
     protected getProxyFor(rawObj: any) {
+        if (!rawObj) return null;
         if (this.arrayMap.has(rawObj)) return this.arrayMap.get(rawObj)!;
 
         let converted = new Proxy(rawObj, this.objectMapper);

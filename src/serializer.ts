@@ -12,7 +12,7 @@ export namespace Serializer {
     export function serialize<T extends object>(obj: T[], mapper: ArrayMapper): any[]
     export function serialize<T extends object>(obj: T, mapper: ObjectMapperBase): any;
     export function serialize<T extends object>(obj: T, mapper: ObjectMapperBase): any | any[] {
-        if (obj instanceof Array && mapper instanceof ArrayMapper) {
+        if (obj && obj instanceof Array && mapper instanceof ArrayMapper) {
             return serializeArray(obj, mapper);
         }
 
@@ -61,13 +61,13 @@ export namespace Serializer {
         return deserialized;
     }
 
-    function serializeArray<T extends object>(arr: T[], mapper: ObjectMapperBase): any {
+    function serializeArray<T extends object>(arr: T[], mapper: ArrayMapper): any {
         let serialized: any[] = [];
         
         let len = arr.length;
 
         for (let i = 0; i < len; i++) {
-            mapper.set(serialized, i, arr[i], serialized);
+            serialized[i] = serialize(arr[i], mapper.ObjectMapper);
         }
 
         return serialized;
@@ -79,7 +79,7 @@ export namespace Serializer {
         let len = rawObj.length;
 
         for (let i = 0; i < len; i++) {
-            deserialized[i] = mapper.get(rawObj, i, rawObj);
+            deserialized[i] = deserialize(rawObj[i], mapper.ObjectMapper);
         }
 
         return deserialized;
